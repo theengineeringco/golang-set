@@ -32,6 +32,9 @@ type Set[T comparable] struct {
 	uss ThreadUnsafeSet[T]
 }
 
+// Assert concrete type:threadUnsafeSet adheres to Set interface.
+var _ SetInterface[string] = (*Set[string])(nil)
+
 // NewSet creates and returns a new set with the given elements.
 // Operations on the resulting set are thread-safe.
 func NewSet[T comparable](vals ...T) *Set[T] {
