@@ -35,10 +35,10 @@ SOFTWARE.
 // that can enforce mutual exclusion through other means.
 package mapset
 
-// Set is the primary interface provided by the mapset package.  It
+// SetInterface is the primary interface provided by the mapset package.  It
 // represents an unordered set of data and a large number of
 // operations that can be applied to that set.
-type Set[T comparable] interface {
+type SetInterface[T comparable] interface {
 	// Adds an element to the set. Returns whether
 	// the item was added.
 	Add(val T) bool
@@ -52,7 +52,7 @@ type Set[T comparable] interface {
 
 	// Returns a clone of the set using the same
 	// implementation, duplicating all keys.
-	Clone() Set[T]
+	Clone() SetInterface[T]
 
 	// Returns whether the given items
 	// are all in the set.
@@ -67,7 +67,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, Difference will
 	// panic.
-	Difference(other Set[T]) Set[T]
+	Difference(other SetInterface[T]) SetInterface[T]
 
 	// Determines if two sets are equal to each
 	// other. If they have the same cardinality
@@ -78,7 +78,7 @@ type Set[T comparable] interface {
 	// Note that the argument to Equal must be
 	// of the same type as the receiver of the
 	// method. Otherwise, Equal will panic.
-	Equal(other Set[T]) bool
+	Equal(other SetInterface[T]) bool
 
 	// Returns a new set containing only the elements
 	// that exist only in both sets.
@@ -87,7 +87,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, Intersect will
 	// panic.
-	Intersect(other Set[T]) Set[T]
+	Intersect(other SetInterface[T]) SetInterface[T]
 
 	// Determines if every element in this set is in
 	// the other set but the two sets are not equal.
@@ -96,7 +96,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, IsProperSubset
 	// will panic.
-	IsProperSubset(other Set[T]) bool
+	IsProperSubset(other SetInterface[T]) bool
 
 	// Determines if every element in the other set
 	// is in this set but the two sets are not
@@ -106,7 +106,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, IsSuperset will
 	// panic.
-	IsProperSuperset(other Set[T]) bool
+	IsProperSuperset(other SetInterface[T]) bool
 
 	// Determines if every element in this set is in
 	// the other set.
@@ -115,7 +115,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, IsSubset will
 	// panic.
-	IsSubset(other Set[T]) bool
+	IsSubset(other SetInterface[T]) bool
 
 	// Determines if every element in the other set
 	// is in this set.
@@ -124,7 +124,7 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, IsSuperset will
 	// panic.
-	IsSuperset(other Set[T]) bool
+	IsSuperset(other SetInterface[T]) bool
 
 	// Iterates over elements and executes the passed func against each element.
 	// If passed func returns true, stop iteration at the time.
@@ -152,14 +152,14 @@ type Set[T comparable] interface {
 	// must be of the same type as the receiver
 	// of the method. Otherwise, SymmetricDifference
 	// will panic.
-	SymmetricDifference(other Set[T]) Set[T]
+	SymmetricDifference(other SetInterface[T]) SetInterface[T]
 
 	// Returns a new set with all elements in both sets.
 	//
 	// Note that the argument to Union must be of the
 	// same type as the receiver of the method.
 	// Otherwise, IsSuperset will panic.
-	Union(other Set[T]) Set[T]
+	Union(other SetInterface[T]) SetInterface[T]
 
 	// Pop removes and returns an arbitrary item from the set.
 	Pop() (T, bool)
@@ -175,22 +175,3 @@ type Set[T comparable] interface {
 	UnmarshalJSON(b []byte) error
 }
 
-// NewSet creates and returns a new set with the given elements.
-// Operations on the resulting set are thread-safe.
-func NewSet[T comparable](vals ...T) Set[T] {
-	s := newThreadSafeSet[T]()
-	for _, item := range vals {
-		s.Add(item)
-	}
-	return &s
-}
-
-// NewThreadUnsafeSet creates and returns a new set with the given elements.
-// Operations on the resulting set are not thread-safe.
-func NewThreadUnsafeSet[T comparable](vals ...T) Set[T] {
-	s := newThreadUnsafeSet[T]()
-	for _, item := range vals {
-		s.Add(item)
-	}
-	return &s
-}

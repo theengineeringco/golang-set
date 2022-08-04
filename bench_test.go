@@ -38,7 +38,7 @@ func nrand(n int) []int {
 	return i
 }
 
-func benchAdd(b *testing.B, n int, newSet func(...int) Set[int]) {
+func benchAdd(b *testing.B, n int, newSet func(...int) SetInterface[int]) {
 	nums := nrand(n)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -50,14 +50,20 @@ func benchAdd(b *testing.B, n int, newSet func(...int) Set[int]) {
 }
 
 func BenchmarkAddSafe(b *testing.B) {
-	benchAdd(b, 1000, NewSet[int])
+	newSet := func(ints ...int) SetInterface[int] {
+		return NewSet(ints...)
+	}
+	benchAdd(b, 1000, newSet)
 }
 
 func BenchmarkAddUnsafe(b *testing.B) {
-	benchAdd(b, 1000, NewThreadUnsafeSet[int])
+	newSet := func(ints ...int) SetInterface[int] {
+		return NewThreadUnsafeSet(ints...)
+	}
+	benchAdd(b, 1000, newSet)
 }
 
-func benchRemove(b *testing.B, s Set[int]) {
+func benchRemove(b *testing.B, s SetInterface[int]) {
 	nums := nrand(b.N)
 	for _, v := range nums {
 		s.Add(v)
@@ -77,7 +83,7 @@ func BenchmarkRemoveUnsafe(b *testing.B) {
 	benchRemove(b, NewThreadUnsafeSet[int]())
 }
 
-func benchCardinality(b *testing.B, s Set[int]) {
+func benchCardinality(b *testing.B, s SetInterface[int]) {
 	for i := 0; i < b.N; i++ {
 		s.Cardinality()
 	}
@@ -91,7 +97,7 @@ func BenchmarkCardinalityUnsafe(b *testing.B) {
 	benchCardinality(b, NewThreadUnsafeSet[int]())
 }
 
-func benchClear(b *testing.B, s Set[int]) {
+func benchClear(b *testing.B, s SetInterface[int]) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s.Clear()
@@ -106,7 +112,7 @@ func BenchmarkClearUnsafe(b *testing.B) {
 	benchClear(b, NewThreadUnsafeSet[int]())
 }
 
-func benchClone(b *testing.B, n int, s Set[int]) {
+func benchClone(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -142,7 +148,7 @@ func BenchmarkClone100Unsafe(b *testing.B) {
 	benchClone(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchContains(b *testing.B, n int, s Set[int]) {
+func benchContains(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -180,7 +186,7 @@ func BenchmarkContains100Unsafe(b *testing.B) {
 	benchContains(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchEqual(b *testing.B, n int, s, t Set[int]) {
+func benchEqual(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -217,7 +223,7 @@ func BenchmarkEqual100Unsafe(b *testing.B) {
 	benchEqual(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchDifference(b *testing.B, n int, s, t Set[int]) {
+func benchDifference(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -232,7 +238,7 @@ func benchDifference(b *testing.B, n int, s, t Set[int]) {
 	}
 }
 
-func benchIsSubset(b *testing.B, n int, s, t Set[int]) {
+func benchIsSubset(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -269,7 +275,7 @@ func BenchmarkIsSubset100Unsafe(b *testing.B) {
 	benchIsSubset(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchIsSuperset(b *testing.B, n int, s, t Set[int]) {
+func benchIsSuperset(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -306,7 +312,7 @@ func BenchmarkIsSuperset100Unsafe(b *testing.B) {
 	benchIsSuperset(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchIsProperSubset(b *testing.B, n int, s, t Set[int]) {
+func benchIsProperSubset(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -343,7 +349,7 @@ func BenchmarkIsProperSubset100Unsafe(b *testing.B) {
 	benchIsProperSubset(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchIsProperSuperset(b *testing.B, n int, s, t Set[int]) {
+func benchIsProperSuperset(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -404,7 +410,7 @@ func BenchmarkDifference100Unsafe(b *testing.B) {
 	benchDifference(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchIntersect(b *testing.B, n int, s, t Set[int]) {
+func benchIntersect(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(int(float64(n) * float64(1.5)))
 	for _, v := range nums[:n] {
 		s.Add(v)
@@ -443,7 +449,7 @@ func BenchmarkIntersect100Unsafe(b *testing.B) {
 	benchIntersect(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchSymmetricDifference(b *testing.B, n int, s, t Set[int]) {
+func benchSymmetricDifference(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(int(float64(n) * float64(1.5)))
 	for _, v := range nums[:n] {
 		s.Add(v)
@@ -482,7 +488,7 @@ func BenchmarkSymmetricDifference100Unsafe(b *testing.B) {
 	benchSymmetricDifference(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchUnion(b *testing.B, n int, s, t Set[int]) {
+func benchUnion(b *testing.B, n int, s, t SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums[:n/2] {
 		s.Add(v)
@@ -521,7 +527,7 @@ func BenchmarkUnion100Unsafe(b *testing.B) {
 	benchUnion(b, 100, NewThreadUnsafeSet[int](), NewThreadUnsafeSet[int]())
 }
 
-func benchEach(b *testing.B, n int, s Set[int]) {
+func benchEach(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -559,7 +565,7 @@ func BenchmarkEach100Unsafe(b *testing.B) {
 	benchEach(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchIter(b *testing.B, n int, s Set[int]) {
+func benchIter(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -598,7 +604,7 @@ func BenchmarkIter100Unsafe(b *testing.B) {
 	benchIter(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchIterator(b *testing.B, n int, s Set[int]) {
+func benchIterator(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -637,7 +643,7 @@ func BenchmarkIterator100Unsafe(b *testing.B) {
 	benchIterator(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchString(b *testing.B, n int, s Set[int]) {
+func benchString(b *testing.B, n int, s SetInterface[int]) {
 	nums := nrand(n)
 	for _, v := range nums {
 		s.Add(v)
@@ -673,7 +679,7 @@ func BenchmarkString100Unsafe(b *testing.B) {
 	benchString(b, 100, NewThreadUnsafeSet[int]())
 }
 
-func benchToSlice(b *testing.B, s Set[int]) {
+func benchToSlice(b *testing.B, s SetInterface[int]) {
 	nums := nrand(b.N)
 	for _, v := range nums {
 		s.Add(v)

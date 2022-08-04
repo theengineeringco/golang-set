@@ -27,7 +27,7 @@ package mapset
 
 import "testing"
 
-func makeSetInt(ints []int) Set[int] {
+func makeSetInt(ints []int) SetInterface[int] {
 	s := NewSet[int]()
 	for _, i := range ints {
 		s.Add(i)
@@ -35,7 +35,7 @@ func makeSetInt(ints []int) Set[int] {
 	return s
 }
 
-func makeUnsafeSetInt(ints []int) Set[int] {
+func makeUnsafeSetInt(ints []int) SetInterface[int] {
 	s := NewThreadUnsafeSet[int]()
 	for _, i := range ints {
 		s.Add(i)
@@ -43,7 +43,7 @@ func makeUnsafeSetInt(ints []int) Set[int] {
 	return s
 }
 
-func assertEqual[T comparable](a, b Set[T], t *testing.T) {
+func assertEqual[T comparable](a, b SetInterface[T], t *testing.T) {
 	if !a.Equal(b) {
 		t.Errorf("%v != %v\n", a, b)
 	}
@@ -55,11 +55,11 @@ func Test_NewSet(t *testing.T) {
 		t.Error("NewSet should start out as an empty set")
 	}
 
-	assertEqual(NewSet([]int{}...), NewSet[int](), t)
-	assertEqual(NewSet([]int{1}...), NewSet(1), t)
-	assertEqual(NewSet([]int{1, 2}...), NewSet(1, 2), t)
-	assertEqual(NewSet([]string{"a"}...), NewSet("a"), t)
-	assertEqual(NewSet([]string{"a", "b"}...), NewSet("a", "b"), t)
+	assertEqual[int](NewSet([]int{}...), NewSet[int](), t)
+	assertEqual[int](NewSet([]int{1}...), NewSet(1), t)
+	assertEqual[int](NewSet([]int{1, 2}...), NewSet(1, 2), t)
+	assertEqual[string](NewSet([]string{"a"}...), NewSet("a"), t)
+	assertEqual[string](NewSet([]string{"a", "b"}...), NewSet("a", "b"), t)
 }
 
 func Test_NewUnsafeSet(t *testing.T) {

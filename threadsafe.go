@@ -27,34 +27,44 @@ package mapset
 
 import "sync"
 
-type threadSafeSet[T comparable] struct {
+type Set[T comparable] struct {
 	sync.RWMutex
-	uss threadUnsafeSet[T]
+	uss ThreadUnsafeSet[T]
 }
 
-func newThreadSafeSet[T comparable]() threadSafeSet[T] {
+// NewSet creates and returns a new set with the given elements.
+// Operations on the resulting set are thread-safe.
+func NewSet[T comparable](vals ...T) *Set[T] {
+	s := newSet[T]()
+	for _, item := range vals {
+		s.Add(item)
+	}
+	return &s
+}
+
+func newSet[T comparable]() Set[T] {
 	newUss := newThreadUnsafeSet[T]()
-	return threadSafeSet[T]{
+	return Set[T]{
 		uss: newUss,
 	}
 }
 
-func (s *threadSafeSet[T]) Add(v T) bool {
+func (s *Set[T]) Add(v T) bool {
 	s.Lock()
 	ret := s.uss.Add(v)
 	s.Unlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) Contains(v ...T) bool {
+func (s *Set[T]) Contains(v ...T) bool {
 	s.RLock()
 	ret := s.uss.Contains(v...)
 	s.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) IsSubset(other Set[T]) bool {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) IsSubset(other SetInterface[T]) bool {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
@@ -65,8 +75,8 @@ func (s *threadSafeSet[T]) IsSubset(other Set[T]) bool {
 	return ret
 }
 
-func (s *threadSafeSet[T]) IsProperSubset(other Set[T]) bool {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) IsProperSubset(other SetInterface[T]) bool {
+	o := other.(*Set[T])
 
 	s.RLock()
 	defer s.RUnlock()
@@ -76,85 +86,85 @@ func (s *threadSafeSet[T]) IsProperSubset(other Set[T]) bool {
 	return s.uss.IsProperSubset(&o.uss)
 }
 
-func (s *threadSafeSet[T]) IsSuperset(other Set[T]) bool {
+func (s *Set[T]) IsSuperset(other SetInterface[T]) bool {
 	return other.IsSubset(s)
 }
 
-func (s *threadSafeSet[T]) IsProperSuperset(other Set[T]) bool {
+func (s *Set[T]) IsProperSuperset(other SetInterface[T]) bool {
 	return other.IsProperSubset(s)
 }
 
-func (s *threadSafeSet[T]) Union(other Set[T]) Set[T] {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) Union(other SetInterface[T]) SetInterface[T] {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
 
-	unsafeUnion := s.uss.Union(&o.uss).(*threadUnsafeSet[T])
-	ret := &threadSafeSet[T]{uss: *unsafeUnion}
+	unsafeUnion := s.uss.Union(&o.uss).(*ThreadUnsafeSet[T])
+	ret := &Set[T]{uss: *unsafeUnion}
 	s.RUnlock()
 	o.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) Intersect(other Set[T]) Set[T] {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) Intersect(other SetInterface[T]) SetInterface[T] {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
 
-	unsafeIntersection := s.uss.Intersect(&o.uss).(*threadUnsafeSet[T])
-	ret := &threadSafeSet[T]{uss: *unsafeIntersection}
+	unsafeIntersection := s.uss.Intersect(&o.uss).(*ThreadUnsafeSet[T])
+	ret := &Set[T]{uss: *unsafeIntersection}
 	s.RUnlock()
 	o.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) Difference(other Set[T]) Set[T] {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) Difference(other SetInterface[T]) SetInterface[T] {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
 
-	unsafeDifference := s.uss.Difference(&o.uss).(*threadUnsafeSet[T])
-	ret := &threadSafeSet[T]{uss: *unsafeDifference}
+	unsafeDifference := s.uss.Difference(&o.uss).(*ThreadUnsafeSet[T])
+	ret := &Set[T]{uss: *unsafeDifference}
 	s.RUnlock()
 	o.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) SymmetricDifference(other Set[T]) Set[T] {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) SymmetricDifference(other SetInterface[T]) SetInterface[T] {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
 
-	unsafeDifference := s.uss.SymmetricDifference(&o.uss).(*threadUnsafeSet[T])
-	ret := &threadSafeSet[T]{uss: *unsafeDifference}
+	unsafeDifference := s.uss.SymmetricDifference(&o.uss).(*ThreadUnsafeSet[T])
+	ret := &Set[T]{uss: *unsafeDifference}
 	s.RUnlock()
 	o.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) Clear() {
+func (s *Set[T]) Clear() {
 	s.Lock()
 	s.uss = newThreadUnsafeSet[T]()
 	s.Unlock()
 }
 
-func (s *threadSafeSet[T]) Remove(v T) {
+func (s *Set[T]) Remove(v T) {
 	s.Lock()
 	delete(s.uss, v)
 	s.Unlock()
 }
 
-func (s *threadSafeSet[T]) Cardinality() int {
+func (s *Set[T]) Cardinality() int {
 	s.RLock()
 	defer s.RUnlock()
 	return len(s.uss)
 }
 
-func (s *threadSafeSet[T]) Each(cb func(T) bool) {
+func (s *Set[T]) Each(cb func(T) bool) {
 	s.RLock()
 	for elem := range s.uss {
 		if cb(elem) {
@@ -164,7 +174,7 @@ func (s *threadSafeSet[T]) Each(cb func(T) bool) {
 	s.RUnlock()
 }
 
-func (s *threadSafeSet[T]) Iter() <-chan T {
+func (s *Set[T]) Iter() <-chan T {
 	ch := make(chan T)
 	go func() {
 		s.RLock()
@@ -179,7 +189,7 @@ func (s *threadSafeSet[T]) Iter() <-chan T {
 	return ch
 }
 
-func (s *threadSafeSet[T]) Iterator() *Iterator[T] {
+func (s *Set[T]) Iterator() *Iterator[T] {
 	iterator, ch, stopCh := newIterator[T]()
 
 	go func() {
@@ -199,8 +209,8 @@ func (s *threadSafeSet[T]) Iterator() *Iterator[T] {
 	return iterator
 }
 
-func (s *threadSafeSet[T]) Equal(other Set[T]) bool {
-	o := other.(*threadSafeSet[T])
+func (s *Set[T]) Equal(other SetInterface[T]) bool {
+	o := other.(*Set[T])
 
 	s.RLock()
 	o.RLock()
@@ -211,29 +221,29 @@ func (s *threadSafeSet[T]) Equal(other Set[T]) bool {
 	return ret
 }
 
-func (s *threadSafeSet[T]) Clone() Set[T] {
+func (s *Set[T]) Clone() SetInterface[T] {
 	s.RLock()
 
-	unsafeClone := s.uss.Clone().(*threadUnsafeSet[T])
-	ret := &threadSafeSet[T]{uss: *unsafeClone}
+	unsafeClone := s.uss.Clone().(*ThreadUnsafeSet[T])
+	ret := &Set[T]{uss: *unsafeClone}
 	s.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) String() string {
+func (s *Set[T]) String() string {
 	s.RLock()
 	ret := s.uss.String()
 	s.RUnlock()
 	return ret
 }
 
-func (s *threadSafeSet[T]) Pop() (T, bool) {
+func (s *Set[T]) Pop() (T, bool) {
 	s.Lock()
 	defer s.Unlock()
 	return s.uss.Pop()
 }
 
-func (s *threadSafeSet[T]) ToSlice() []T {
+func (s *Set[T]) ToSlice() []T {
 	keys := make([]T, 0, s.Cardinality())
 	s.RLock()
 	for elem := range s.uss {
@@ -243,7 +253,7 @@ func (s *threadSafeSet[T]) ToSlice() []T {
 	return keys
 }
 
-func (s *threadSafeSet[T]) MarshalJSON() ([]byte, error) {
+func (s *Set[T]) MarshalJSON() ([]byte, error) {
 	s.RLock()
 	b, err := s.uss.MarshalJSON()
 	s.RUnlock()
@@ -251,7 +261,7 @@ func (s *threadSafeSet[T]) MarshalJSON() ([]byte, error) {
 	return b, err
 }
 
-func (s *threadSafeSet[T]) UnmarshalJSON(p []byte) error {
+func (s *Set[T]) UnmarshalJSON(p []byte) error {
 	s.RLock()
 	err := s.uss.UnmarshalJSON(p)
 	s.RUnlock()
