@@ -482,8 +482,8 @@ func Test_UnmarshalJSON(t *testing.T) {
 		}...,
 	)
 
-	actual := NewSet[string]()
-	err := json.Unmarshal(s, actual)
+	var actual *Set[string]
+	err := json.Unmarshal(s, &actual)
 	if err != nil {
 		t.Errorf("Error should be nil: %v", err)
 	}

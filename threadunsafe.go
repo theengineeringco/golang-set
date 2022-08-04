@@ -297,6 +297,10 @@ func (s *ThreadUnsafeSet[T]) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	if *s == nil {
+		*s = make(map[T]struct{}, len(i))
+	}
+
 	for _, v := range i {
 		switch t := v.(type) {
 		case T:
